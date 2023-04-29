@@ -1,4 +1,4 @@
-import streamlit as st, pygame as pg, numpy as np, matplotlib.pyplot as plt, time
+import streamlit as st, pygame as pg, numpy as np, matplotlib.pyplot as plt, time, base64
 
 st.set_page_config(page_title="Simulation", layout="wide")
 st.title('This is a title')
@@ -81,3 +81,29 @@ b = st.slider("This is a slider", 0, 100, (25, 75))
 st.write("---")
 
 st.write(f"This text is between the horizontal rules. {b}")
+
+with st.echo():
+    st.write('This code will be printed')
+    with st.echo():
+        st.text("Same")
+    
+if "a" not in st.session_state:
+    st.session_state.a = 20
+increment = st.button("Add 1")
+if increment:
+    st.session_state.a += 1
+st.write(f"{st.session_state.a}")
+
+def autoplay_audio(file_path: str):
+    with open(file_path, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+            <audio autoplay="true">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(md, unsafe_allow_html=True)
+ 
+if st.button("Auto-playing Audio!"):
+    autoplay_audio("sound.mp3")
