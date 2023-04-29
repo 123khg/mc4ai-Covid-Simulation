@@ -9,7 +9,7 @@
 
 ## Đề tài: Rhythm Game and analyse progress
 
-## Các thư viện sử dụng: `numpy, matplotlib, streamlit, scikit-learn, plotly`
+## Các thư viện sử dụng: `numpy, matplotlib, streamlit, scikit-learn, plotly, base64`
 
 ## Các chức năng chính & kế hoạch thực hiện
 
