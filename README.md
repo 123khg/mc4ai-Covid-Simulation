@@ -7,7 +7,7 @@
 
 # Thông tin project
 
-## Đề tài: Rhythm Game and analyse progress
+## Đề tài: Rhythm Game and analyse progress MC4AI 2023
 
 ## Các thư viện sử dụng: `numpy, matplotlib, streamlit, scikit-learn, plotly, base64`
 
