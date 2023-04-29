@@ -1,8 +1,9 @@
 # Danh sách thành viên
 
-| Họ Tên             | Lớp   | Email                  |
-| ------------------ | ----- | ---------------------- |
-| Nguyễn Phước Khang | 10CL2 | khgallgaming@gmail.com |
+| Họ Tên             | Lớp   | Email                    |
+| ------------------ | ----- | -------------------------|
+| Nguyễn Phước Khang | 10CL2 | khgallgaming@gmail.com   |
+| Trần Gia Bảo       | 10CA2 | paul.trangiabao@gmail.com|
 
 # Thông tin project
 
