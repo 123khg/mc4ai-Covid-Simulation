@@ -1,0 +1,27 @@
+<script>
+  const streamlitDoc = window.parent.document;
+
+  buttons = Array.from(streamlitDoc.querySelectorAll(".stButton > button"));
+  console.log(buttons);
+  const but1 = buttons.find((element) => element.innerText === "A");
+  const but2 = buttons.find((element) => element.innerText === "S");
+  const but3 = buttons.find((element) => element.innerText === "D");
+  const but4 = buttons.find((element) => element.innerText === "F");
+
+  streamlitDoc.addEventListener("keydown", function (e) {
+    switch (e.key) {
+      case "a":
+        but1.click();
+        break;
+      case "s":
+        but2.click();
+        break;
+      case "d":
+        but3.click();
+        break;
+      case "f":
+        but4.click();
+        break;
+    }
+  });
+</script>
