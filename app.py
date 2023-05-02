@@ -61,7 +61,7 @@ with st.empty():
             #Keyboard event
             components.html(read_html(), height=0, width=0)
         else: 
-            state.difficulty = st.select_slider("**Dificulty**", ["Very Easy", "Easy", "Normal", "Hard"])
+            state.difficulty = st.select_slider("**Difficulty**", ["Very Easy", "Easy", "Normal", "Hard"])
             if st.button("**Play!**"):
                 state.play = True
                 st.experimental_rerun()
