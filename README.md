@@ -18,7 +18,7 @@
 | Web UI              | Nguyễn Phước Khang                | 4/05/23                 |
 | Game Mechanics      | Nguyễn Phước Khang                | 7/05/23                 |
 | Plots and graphs    | Trần Gia Bảo                      | 9/05/23                 |
-| Add more game modes | Nguyễn Phước Khang                | 10/05/2023              |
+| Add more game modes | Nguyễn Phước Khang                | 10/05/23                |
 | Analysing           | Nguyễn Phước Khang + Trần Gia Bảo | 11/05/23                |
 | Data base + model   | Nguyễn Phước Khang + Trần Gia Bảo | 12/05/23                |
 | Styling             | Nguyễn Phước Khang + Trần Gia Bảo | 13/05/23                |
