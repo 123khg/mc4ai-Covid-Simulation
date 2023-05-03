@@ -14,15 +14,15 @@ Same requirements: function that receives time appear and duration of notes (no 
 #notes is a list that has 4 elements which indicates the position of the note on the plot
 #duration is a list that also has 4 elements which has the y-length of the note
 '''
-Heres a hint: use matplotlib plt.bar(x, height, width, y_coord, edge_color = "black"
+Heres a hint: use matplotlib plt.bar(x, height, width, y_coord, edge_color = "black")
 '''
-def Piano(width, height, notes, duration):
+
+def Piano(UIheight, notes, duration, starttime):
     pass
     return fig
     
     
-    
-def Drums(width, height, notes, duration):
+def Drums(UIheight, notes, duration, starttime):
     pass
     return fig
     
