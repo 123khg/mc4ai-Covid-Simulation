@@ -1,0 +1,10 @@
+/*Button alignment*/
+.row-widget.stButton {
+  text-align: center;
+}
+
+/*Side bar width*/
+[data-testid="stSidebar"][aria-expanded="true"] {
+  min-width: 410px;
+  max-width: 410px;
+}
