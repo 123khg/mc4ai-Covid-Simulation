@@ -2,8 +2,8 @@
 import streamlit as st, plotly as plt, matplotlib.pyplot as mat, numpy as np, time
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
-from game.py import Simulation_Plot
-rng = default_rng()
+from simulation_plotting import *
+
 st.set_page_config(page_title = "Rhythm Game", layout = "wide")
 st.markdown("<h1 style='text-align: center'>Covid Simulation</h1>", unsafe_allow_html=True)
 
@@ -60,7 +60,7 @@ with st.sidebar:
 
 #SIMULATION SCREEN
 if st.button("Simulate"):
-    live_chart, simulate_screen = st.columns([3,2])
+    live_chart, simulate_screen = st.columns(2)
     
     fig, ax = mat.subplots()
     ax.set_ylim(0, 60)
@@ -69,10 +69,15 @@ if st.button("Simulate"):
     ax.set_xticks(np.arange(4), labels=xlabels)
     ax.bar(np.arange(4), np.arange(5)[1:], 1, bottom=np.arange(4), edgecolor='black')
     live_chart.pyplot(fig)
+    left, right = simulate_screen.columns(2)
     
+    '''for i in range(3):
+        left.pyplot(fig)
+        right.pyplot(fig)'''
     fig2, state.people = Simulation_Plot(mode, population, initial_infected, contact_radius, recovery_chance, fatality,
                                          distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
                                          infected_threshold=0, travel_rate=0, vaccination_chance=0, expire_date=0)
+    simulate_screen.pyplot(fig2)
 
 #BACKEND
 def read_file(path):
