@@ -1,0 +1,44 @@
+What the project aim:
+
+1. Simulate Covid:
+- Simulate people and how the infection spread
+    + People move randomly according to scenarios:
+        ++ Move the same in every mode but with some extra abilities
+
+        ++ With many cities, some people has a chance 
+           of traveling to a random city (plot)
+
+        ++ With social distancing, people stil move randomly but are
+           affected by how close they are to the nearest people
+
+        ++ With centered area, some people has a chance of 
+           moving towards the center and back
+           
+        ++ With isolation, infected gets put into a chamber (plot)
+
+    + has a chance of getting infected when near infected ones
+
+- Simulate different scenarios:
+    + Default: do nothing
+
+    + Centeral Area: theres a shopping mall
+
+    + Social Distancing: distance from each other
+
+    + Vaccinated: some people has a chance to get vaccinated and immune 
+                  to Covid for a period, after that they become susceptible
+
+    + Isolation:  catch infected after being spotted for some days
+                  all initial infected ones show no symptoms
+
+- Simulate how the population gets infected/cured via a live graph
+
+2. Store all the Figures from each scenarios for analysis
+- After each run when the user hit "Stop", return the live fig
+
+-----------------------------------------------------------------------------
+What core function is missing:
+
+How people move for each scenarios
+Getting Infected
+Plots for each scenarios, Default is almost done
