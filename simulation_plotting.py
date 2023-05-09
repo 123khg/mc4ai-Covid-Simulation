@@ -6,29 +6,33 @@ import matplotlib.pyplot as plt
 rng = default_rng()
 
 class Person:
-    def __init__(self, plot, x, y, state):
+    def __init__(self, plot, x, y, state, delay = 5):
         self.plot = plot
         self.x = x
         self.y = y
         self.state = state
+        self.delay = delay # Cuz the officials are too bad they cant isolate quickly
 
     def quarantine(self):
-        """
-        cool, and a threshold until the infected, which show symptoms, get to a point
-        -> there by making covid tests and increase chance of showing
-        
-        so like this
-        all infecteds will be tagged as no symptoms
-        then after a few iterations there'll be chances of them being turned to infected (showing symptoms)
-
-        Then i recommend making an Update() function first, as these functions rely heavily
-        on the update
-        """
         if self.state == 'infected':
-            # self.plot to quarantine
-            pass
+            '''1. Check if infected ( has symptom )
+            2. Check delay
+            3. Delay not 0 -> self.delay -= 1
+            4. Delay = 0 -> self.plot -> isolate
+            so the normal one is 0 for default
+            [2,3] smthing for many cities
+            make it 1 ( like 1 plot is 0 and the isolation chamber is 1 )
+            '''
+            if self.delay > 0: self.delay -= 1
+            else: self.plot = 1
+            # guess that's it for update()
         pass
-            
+        
+    def move(self): 
+        if 3 <= self.x <= 997: 
+            self.x = self.x + np.random.randint(low=-3, high=3)
+        if 3 <= self.y <= 997: 
+            self.y = self.y + np.random.randint(low=-3, high=3)
             
 def plot_initiate(mode, population, initial_infected, contact_radius, recovery_chance, fatality, 
                     distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
@@ -47,20 +51,45 @@ def plot_initiate(mode, population, initial_infected, contact_radius, recovery_c
     #Identify which modes and how the plots are displayed
     if "Many Cities" in mode:
         fig, axs = plt.subplots([3, 2])
+
+        coords = {}
+        for row in range(3):
+            for col in range(2):
+                coords[[row, col]] = []
+        
+        for someone in people:
+            coords[someone.plot].append([someone.x, someone.y])
+
+        for row in range(3):
+            for col in range(2):
+                axs[row][col].scatter(
+                    np.array(coords[[row, col]])[:, 0],
+                    np.array(coords[[row, col]])[:, 1])
+        
     else:
         fig, axs = plt.subplots()
     
-    #Draw
-    coords = []
-    for someone in people:
-        coords.append([someone.x, someone.y])
-    coords = np.array(coords)
-    axs.scatter(coords[:, 0], coords[:, 1])
+        coords = []
+        for someone in people:
+            coords.append([someone.x, someone.y])
+        coords = np.array(coords)
+        axs.scatter(coords[:, 0], coords[:, 1])
 
     isolatefig = False
     if "Isolate" in mode:
-        isolatefig, isolateaxs = plt.subplots()
-
+        isolatefig, isolateaxs = plt.subplots() #Over here
+        #replace this plt.subplots() into a function that returns isolatefig and axs
+        #so basically, hang on. Imma add a new property to "Person" called quarantine delay
+        # ok and how does the update() thingy work
+        # So
+        '''1. Check if infected
+        2. Check delay
+        3. Delay not 0 -> self.delay -= 1
+        4. Delay = 0 -> self.plot -> isolate
+        so the normal one is 0 for default
+        [2,3] smthing for many cities
+        make it 1 ( like 1 plot is 0 and the isolation chamber is 1 )
+'''
     #Live graph for real-time analysis
     livefig = live_graph(history)
     fig.tight_layout(pad=0.3)
@@ -92,5 +121,35 @@ def live_graph(history=[[Person(0, 0, 0, "normal"), Person(0, 0, 0, "normal")],
     axs.plot(hist[:,0], hist[:,2], c="red")
     axs.plot(hist[:,0], hist[:,3], c="gray")
     axs.legend(["normal", "infected", "removed"])
-    plt.show()
-live_graph()
+    return fig
+
+def update(people, history):
+    # change values here
+    for someone in Person:
+        someone.move()
+        someone.quarantine()
+    # draw
+    live_graph(history)
+'''
+so like in this "people" list
+u have 1st: x, y coords and plot index for plotting
+2nd: state -> color
+from history
+3rd: state -> live graph
+
+wait so update's just drawing all the data from people/history?
+
+draw first -> change the values
+
+
+need quarantine() to count and add them to each plots (aka changing their self.plot)
+need people to Move() -> to update their position -> New people -> New history
+need fig = Plotting for simulation
+need isolatefig = Function()
+need live_fig = Live_graph()
+for now thats it
+
+Need to return this : 
+
+(fig, isolatefig), livefig, people, history
+'''

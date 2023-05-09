@@ -15,10 +15,13 @@ st.markdown("<h1 style='text-align: center'>Covid Simulation</h1>", unsafe_allow
 state = st.session_state
 if "val" not in state:
     state.val = True
-    state.simulate = False
+    state.simulate = "Configuring"
     state.people = []
     state.history = []
 
+if state.simulate != "Configuring":
+    st_autorefresh(interval=1000, key="Initiate")
+    
 #SIMULATION CONTROLS AND PARAMETERS
 with st.sidebar:
     mode = st.multiselect("**Simulation Scenarios**",
@@ -64,23 +67,17 @@ with st.sidebar:
 
 #SIMULATION SCREEN
 if st.button("Simulate"):
+    state.simulate = "Initiate"
+
+if state.simulate != "Configuring":
     live_chart, simulate_screen = st.columns(2)
     
-    hh = '''fig, ax = mat.subplots()
-    ax.set_ylim(0, 60)
-    #ax.axis("off")
-    xlabels = ['I', 'II', 'III', 'IV']
-    ax.set_xticks(np.arange(4), labels=xlabels)
-    ax.bar(np.arange(4), np.arange(5)[1:], 1, bottom=np.arange(4), edgecolor='black')
-    live_chart.pyplot(fig)'''
-    left, right = simulate_screen.columns(2)
-    
-    if not state.simulate:
+    if state.simulate == "Initiate":
         (simulate_fig, isolate_fig), live_fig, state.people, state.history = plot_initiate(
             mode, population, initial_infected, contact_radius, recovery_chance, fatality,
             distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
             infected_threshold=0, travel_rate=0, vaccination_chance=0, expire_date=0)
-        state.simulate = True
+        state.simulate = "Running"
     else:
         (simulate_fig, isolate_fig), live_fig, state.people, state.history = plot_initiate(
             mode, population, initial_infected, contact_radius, recovery_chance, fatality,

@@ -1,0 +1,8 @@
+import numpy
+
+a = {
+    1: ["a", 2, True]
+}
+print(a)
+a[1].append("Lmao")
+print(a)
