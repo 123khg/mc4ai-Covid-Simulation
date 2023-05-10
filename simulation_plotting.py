@@ -6,12 +6,14 @@ import matplotlib.pyplot as plt
 rng = default_rng()
 
 class Person:
-    def __init__(self, plot, x, y, state, delay = 5):
+    def __init__(self, plot, x, y, state, delay = 5): #"""mode, rng"""):
         self.plot = plot
         self.x = x
         self.y = y
         self.state = state
         self.delay = delay # Cuz the officials are too bad they cant isolate quickly
+        # self.mode = mode
+        # self.rng = rng
 
     def quarantine(self):
         if self.state == 'infected':
@@ -33,6 +35,29 @@ class Person:
             self.x = self.x + np.random.randint(low=-3, high=3)
         if 3 <= self.y <= 997: 
             self.y = self.y + np.random.randint(low=-3, high=3)
+
+    def move_between_cities(self):
+        if "Many Cities" in self.mode:
+            self.plot = [np.random.randint(low=1, high=3), np.random.randint(low=1, high=2)]
+        else: pass
+
+    def commute_to_center(self):
+        if "Central Area" in self.mode:
+            if np.random.randint(low=0, high=100) > 50 and self.state == 'normal' and self.x != 500 and self.y != 500:
+                self.x = 500
+                self.y = 500
+            elif self.x == 500 and self.y == 500:
+                self.x = np.random.randint(0, 1000)
+                self.y = np.random.randint(0, 1000)
+            else: pass
+        else: pass
+    
+    def infect(self):
+        pass
+     
+
+                          
+    
             
 def plot_initiate(mode, population, initial_infected, contact_radius, recovery_chance, fatality, 
                     distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
@@ -73,7 +98,7 @@ def plot_initiate(mode, population, initial_infected, contact_radius, recovery_c
         for someone in people:
             coords.append([someone.x, someone.y])
         coords = np.array(coords)
-        axs.scatter(coords[:, 0], coords[:, 1])
+        axs.scatter(coords[:,0], coords[:,1])
 
     isolatefig = False
     if "Isolate" in mode:
@@ -94,7 +119,7 @@ def plot_initiate(mode, population, initial_infected, contact_radius, recovery_c
     livefig = live_graph(history)
     fig.tight_layout(pad=0.3)
 
-    return (fig, isolatefig), livefig, people, history
+    return (fig, isolatefig), livefig, people, history, mode
 
 e = """
 "normal", "infected", "infected no symptoms", "vaccinated", "removed"
