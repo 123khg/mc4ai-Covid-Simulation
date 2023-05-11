@@ -1,46 +1,48 @@
-import streamlit as st, plotly as plt, numpy as np, base64, time
-
-means = []
-cov = [[1, 0], [0, 1]]
-n = 1
-X = []
-for i in range(2):
-    means.append(np.random.randint(low=0, high=20, size=(2)).tolist())
-    X.append(np.random.multivariate_normal(means[i], cov, n))
-
-means = np.array(means)
-X = np.array(X)
-print(means,"\n", X)
-
-
-
-
-# code for analysis, might gonna need some changes for it to be compatible w/ streamlit (also how to get hist into this file for the regression thing)
+import numpy as np, matplotlib as plt
 from simulation_plotting import live_graph
+from sklearn.linear_model import LinearRegression
 
-fig = live_graph(hist)
 
-X = [i for i in range(len(hist))]
-ys = hist[:,1]
-yi = hist[:,2]
-yr = hist[:,3]
 
-def predict(X, ys, yi, yr):
-    from sklearn.linear_model import LinearRegression
+def predict(itercount, ys, yi, yr, history):
+    hist = []
+    for i, people in enumerate(history):
+        for human in people:
+            s_count = 0
+            i_count = 0
+            r_count = 0
+            if human.state == "normal" or human.state == "vaccinated": s_count+=1
+            if human.state == "infected" or human.state == "infected no symptoms": i_count+=1
+            if human.state == "removed": r_count+=1
+    hist.append([i, s_count, i_count, r_count])
+    hist = np.array(hist)
+
     models = LinearRegression()
     modeli = LinearRegression()
     modelr = LinearRegression()
-    models.fit(X, ys)
-    modeli.fit(X, yi)
-    modelr.fit(X, yr)
+    models.fit(itercount, ys)
+    modeli.fit(itercount, yi)
+    modelr.fit(itercount, yr)
 
-    when_to_predict = int(input())
-    fig.scatter(when_to_predict, models.predict(when_to_predict))
-    fig.scatter(when_to_predict, modeli.predict(when_to_predict))
-    fig.scatter(when_to_predict, modelr.predict(when_to_predict))
-    fig.show()
-    return fig
+    fig, axs = plt.subplots()
+    when_to_predict = 5
+    axs.scatter(when_to_predict, models.predict(when_to_predict))
+    axs.scatter(when_to_predict, modeli.predict(when_to_predict))
+    axs.scatter(when_to_predict, modelr.predict(when_to_predict))
+    axs.show()
+    return axs
 
-predict(X, ys, yi, yr)
-
-
+def R(itercount, yi):
+    from sklearn.linear_model import LinearRegression
+    from app import population
+    """
+    for each infectious case:
+        count # of transfers
+        estimate # of transfers (based on duration)
+        average (#tranfers_count, #estimated)
+    """
+    transfer = yi[-1]-yi[-2]
+    modeli = LinearRegression()
+    modeli.fit(itercount, yi)
+    estimate = modeli.predict(itercount[-1]+1)
+    return (population**(-1))*(0.5*(transfer+estimate))

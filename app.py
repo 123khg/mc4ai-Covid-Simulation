@@ -3,9 +3,10 @@ import streamlit as st, plotly as plt, matplotlib.pyplot as mat, numpy as np, ti
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 from simulation_plotting import *
+from analysis import *
 
 mode, population, initial_infected, contact_radius, recovery_chance, fatality, = [0]*6
-distancing, distancing_duration, center_gather_rate, symptom_showing, = None, 0, 0, 0
+distancing, duration, center_gather_rate, symptom_showing, = None, 0, 0, 0
 infected_threshold, travel_rate, vaccination_chance, expire_date = [0]*4
 
 st.set_page_config(page_title = "Rhythm Game", layout = "wide")
@@ -18,10 +19,12 @@ if "val" not in state:
     state.simulate = "Configuring"
     state.people = []
     state.history = []
+    state.archive = []
+    state.distance_duration = 0
 
 if state.simulate != "Configuring":
     st_autorefresh(interval=1000, key="Initiate")
-    
+
 #SIMULATION CONTROLS AND PARAMETERS
 with st.sidebar:
     mode = st.multiselect("**Simulation Scenarios**",
@@ -66,30 +69,55 @@ with st.sidebar:
 #st.text(f"{state.people}")
 
 #SIMULATION SCREEN
-if st.button("Simulate"):
+simbutt, paubutt, stobutt = st.columns(3)
+if simbutt.button("Simulate"):
     state.simulate = "Initiate"
+
+if paubutt.button("Pause"):
+    state.simulate = "Pause"
+    time.sleep(1)
+    state.simulate = "Running"
+    
+if stobutt.button('Stop'):
+    state.simulate = 'Stop'
 
 if state.simulate != "Configuring":
     live_chart, simulate_screen = st.columns(2)
     
     if state.simulate == "Initiate":
-        (simulate_fig, isolate_fig), live_fig, state.people, state.history = plot_initiate(
-            mode, population, initial_infected, contact_radius, recovery_chance, fatality,
-            distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
-            infected_threshold=0, travel_rate=0, vaccination_chance=0, expire_date=0)
+        simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = plot_initiate(
+            mode, population, initial_infected, history=state.history, distance_duration=duration)
         state.simulate = "Running"
-    else:
-        (simulate_fig, isolate_fig), live_fig, state.people, state.history = plot_initiate(
-            mode, population, initial_infected, contact_radius, recovery_chance, fatality,
-            distancing=None, distancing_duration=0, center_gather_rate=0, symptom_showing=0,
-            infected_threshold=0, travel_rate=0, vaccination_chance=0, expire_date=0)
-
+    elif state.simulate == "Running":
+        simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = update(
+            mode, contact_radius, recovery_chance, fatality, distancing_duration_countdown=state.distance_duration,
+            gather_rate=0, symptom_showing=0, history=state.history, infected_threshold=0, 
+            travel_rate=0, vaccination_chance=0, expire_date=0, people=state.people)
+    
+        # st.write(R(itercount, yi))
+    
     simulate_screen.pyplot(simulate_fig)
     live_chart.pyplot(live_fig)
 
+
+# if state.simulate == "Stop" or state.simulate == "Configuring":
+#     simulate_archive = st.tab(['Simulation'])
+#     for i in state.archive:
+#         simulate_archive.pyplot(i)
+#     analysis = st.tab(['Analysis'])
+#     fig = live_graph(state.history)
+
+#     itercount = [i for i in range(len(state.history))]
+#     ys = state.history[:,1]
+#     yi = state.history[:,2]
+#     yr = state.history[:,3]
+#     predict(itercount, ys, yi, yr, state.history)
+    
 #BACKEND
 def read_file(path):
     with open(path) as f:
         return f.read()
 components.html(read_file("index.html"), height=0, width=0)
 st.markdown(f'<style>{read_file("index.css")}<style/>', unsafe_allow_html = True)
+
+    
