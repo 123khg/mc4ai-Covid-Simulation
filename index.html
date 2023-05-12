@@ -6,12 +6,4 @@
   const play_button = buttons.find(
     (element) => element.innerText === "Simulate"
   );
-
-  streamlitDoc.addEventListener("keydown", function (e) {
-    switch (e.key) {
-      case "p":
-        play_button.click();
-        break;
-    }
-  });
 </script>

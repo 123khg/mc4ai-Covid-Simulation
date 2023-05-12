@@ -1,10 +1,7 @@
 import numpy as np, matplotlib as plt
-from simulation_plotting import live_graph
 from sklearn.linear_model import LinearRegression
 
-
-
-def predict(itercount, ys, yi, yr, history):
+def SIR(history):
     hist = []
     for i, people in enumerate(history):
         for human in people:
@@ -14,9 +11,17 @@ def predict(itercount, ys, yi, yr, history):
             if human.state == "normal" or human.state == "vaccinated": s_count+=1
             if human.state == "infected" or human.state == "infected no symptoms": i_count+=1
             if human.state == "removed": r_count+=1
-    hist.append([i, s_count, i_count, r_count])
+        hist.append([i, s_count, i_count, r_count])
     hist = np.array(hist)
+    
+    itercount = hist[:, 0]
+    ys = hist[:, 1]
+    yi = hist[:, 2]
+    yr = hist[:, 3]
+    return itercount, ys, yi, yr
 
+def predict(history):
+    itercount, ys, yi, yr = SIR(history)
     models = LinearRegression()
     modeli = LinearRegression()
     modelr = LinearRegression()
@@ -29,20 +34,20 @@ def predict(itercount, ys, yi, yr, history):
     axs.scatter(when_to_predict, models.predict(when_to_predict))
     axs.scatter(when_to_predict, modeli.predict(when_to_predict))
     axs.scatter(when_to_predict, modelr.predict(when_to_predict))
-    axs.show()
-    return axs
 
-def R(itercount, yi):
+    return fig
+
+def R(history, people):
     from sklearn.linear_model import LinearRegression
-    from app import population
     """
     for each infectious case:
         count # of transfers
         estimate # of transfers (based on duration)
         average (#tranfers_count, #estimated)
     """
+    itercount, _, yi, _ = SIR(history)
     transfer = yi[-1]-yi[-2]
     modeli = LinearRegression()
     modeli.fit(itercount, yi)
     estimate = modeli.predict(itercount[-1]+1)
-    return (population**(-1))*(0.5*(transfer+estimate))
+    return (len(people)**(-1))*(0.5*(transfer+estimate))

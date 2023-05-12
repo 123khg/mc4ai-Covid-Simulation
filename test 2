@@ -1,6 +1,0 @@
-import numpy as np
-
-a = np.array([["a", True, 2],
-              ["b", True, 1],
-              ["a", False,3]])
-print(np.where("a" in a[:, 0])[0])
