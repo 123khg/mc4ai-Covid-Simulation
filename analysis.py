@@ -15,6 +15,8 @@ def SIR(history):
     hist = np.array(hist)
     
     itercount = hist[:, 0]
+    itercount = np.array(itercount)
+    itercount = itercount.reshape(-1,1)
     ys = hist[:, 1]
     yi = hist[:, 2]
     yr = hist[:, 3]
