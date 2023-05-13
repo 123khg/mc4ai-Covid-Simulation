@@ -52,7 +52,8 @@ def R(itercount, yi):
         average (#tranfers_count, #estimated)
     """
     itercount, _, yi, _ = SIR(history)
-    if len(yi) >=2: transfer = yi[-1]-yi[-2]
+    if len(yi) >= 2:
+        transfer = yi[len(yi)-1]-yi[len(yi)-2] # not sure if this would going to work
     else: transfer = yi[0]
     modeli = LinearRegression()
     modeli.fit(itercount, yi)
