@@ -71,8 +71,12 @@ simbutt, paubutt, stobutt = st.columns(3)
 if simbutt.button("Simulate"):
     state.simulate = "Initiate"
 
-if paubutt.button("Pause"):
-    state.simulate = "Pause"
+if state.simulate != "Pause":
+    if paubutt.button("Pause"):
+        state.simulate = "Pause"
+else:
+    if paubutt.button("Continue"):
+        state.simulate = "Running"
     
 if stobutt.button('Stop'):
     state.simulate = 'Stop'
@@ -88,7 +92,9 @@ if state.simulate != "Configure":
     if state.simulate == "Initiate":
         simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = plot_initiate(
             mode, population, initial_infected, history=state.history, distance_duration=duration)
-        state.archive.append(live_fig)
+        simulate_screen.pyplot(simulate_fig)
+
+        state.archive.append([live_fig, simulate_fig])
         state.simulate = "Running"
     elif state.simulate == "Running":
         simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = update(
@@ -96,25 +102,32 @@ if state.simulate != "Configure":
             distancing_duration_countdown=state.distance_duration, gather_rate=gather_rate, symptom_showing=symptom_showing, 
             history=state.history, infected_threshold=infected_threshold, simulation_state=state.simulate,
             travel_rate=travel_rate, vaccination_chance=vaccination_chance, expire_date=expire_date, people=state.people)
-        state.archive[-1] = live_fig
+        state.archive[-1] = [live_fig, simulate_fig]
+        
         # st.write(R(itercount, yi))
-    
-    simulate_screen.pyplot(simulate_fig)
-    live_chart.pyplot(live_fig)
 
+    simulate_screen.pyplot(state.archive[-1][1])
+    live_chart.pyplot(state.archive[-1][0])
 
-# if state.simulate == "Stop" or state.simulate == "Configure":
-#     simulate_archive = st.tab(['Simulation'])
-#     for i in state.archive:
-#         simulate_archive.pyplot(i)
-#     analysis = st.tab(['Analysis'])
-#     fig = live_graph(state.history)
+if state.simulate == "Stop" or state.simulate == "Configure":
+    if state.simulate == "Stop":
+        analysis_fig = False
+        #analysis_fig = predict(state.history)
+        state.archive[-1] = [state.archive[-1][0], analysis_fig]
+    analysis_tabs = st.tabs(["Archive", "Analysis"])
+    if analysis_tabs == "Archive":
+        for live, _ in state.archive:
+            analysis_tabs.pyplot(live) 
+    elif analysis_tabs == "Analysis":
+        for _, analyse in state.archive:
+            analysis_tabs.pyplot(analyse)
 
-#     itercount = [i for i in range(len(state.history))]
-#     ys = state.history[:,1]
-#     yi = state.history[:,2]
-#     yr = state.history[:,3]
-#     predict(itercount, ys, yi, yr, state.history)
+    if state.simulate == "Stop":   
+        state.simulate = "Configure"
+        state.loop = 0
+        state.people = []
+        state.history = []
+        state.distance_duration = 0
     
 #BACKEND
 def read_file(path):
