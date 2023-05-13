@@ -1,7 +1,10 @@
 import numpy as np, matplotlib as plt
+from simulation_plotting import live_graph
 from sklearn.linear_model import LinearRegression
 
-def SIR(history):
+
+
+def predict(itercount, ys, yi, yr, history):
     hist = []
     for i, people in enumerate(history):
         for human in people:
@@ -11,7 +14,7 @@ def SIR(history):
             if human.state == "normal" or human.state == "vaccinated": s_count+=1
             if human.state == "infected" or human.state == "infected no symptoms": i_count+=1
             if human.state == "removed": r_count+=1
-        hist.append([i, s_count, i_count, r_count])
+    hist.append([i, s_count, i_count, r_count])
     hist = np.array(hist)
     
     itercount = hist[:, 0]
@@ -36,11 +39,12 @@ def predict(history):
     axs.scatter(when_to_predict, models.predict(when_to_predict))
     axs.scatter(when_to_predict, modeli.predict(when_to_predict))
     axs.scatter(when_to_predict, modelr.predict(when_to_predict))
+    axs.show()
+    return axs
 
-    return fig
-
-def R(history, people):
+def R(itercount, yi):
     from sklearn.linear_model import LinearRegression
+    from app import population
     """
     for each infectious case:
         count # of transfers
@@ -53,4 +57,4 @@ def R(history, people):
     modeli = LinearRegression()
     modeli.fit(itercount, yi)
     estimate = modeli.predict(itercount[-1]+1)
-    return (len(people)**(-1))*(0.5*(transfer+estimate))
+    return (population**(-1))*(0.5*(transfer+estimate))

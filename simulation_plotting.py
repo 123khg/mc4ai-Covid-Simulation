@@ -15,24 +15,19 @@ class Person:
         self.vaccin_expire = 0
         
     def move(self, coords, mode, contact_radius, distancing_duration, _norm = np.linalg.norm): 
-        
-        if 20 <= self.x <= 980: 
-            x = np.random.randint(low=-20, high=20)
-        else:
-            x = 20*((500-self.x)/abs(500-self.x))
-        if 20 <= self.y <= 980: 
-            y = np.random.randint(low=-20, high=20)
-        else:
-            y = 20*((500-self.y)/abs(500-self.y))
+        if 3 <= self.x <= 997: 
+            x = np.random.randint(low=-100, high=100)
+        if 3 <= self.y <= 997: 
+            y = np.random.randint(low=-100, high=100)
 
-        if "Social Distancing" in mode: #this
+        if "Social Distancing" in mode:
             if distancing_duration > 0:
                 thiscoord = [self.x, self.y]
                 for coord in coords:
                     dist = _norm(coord-thiscoord)
-                    if dist <= contact_radius*1.8:
-                        x += 20*(contact_radius/dist) * (self.x - coord[0])/abs((self.x - coord[0]))
-                        y += 20*(contact_radius/dist) * (self.y - coord[1])/abs((self.y - coord[1]))
+                    if dist <= contact_radius*0.2:
+                        x += (2/dist) * (self.x - coord[0])/abs((self.x - coord[0]))
+                        y += (2/dist) * (self.y - coord[1])/abs((self.y - coord[1]))
         
         self.x += x
         self.y += y
@@ -43,13 +38,13 @@ class Person:
         elif np.random.binomial(1, fatality/100, 1):
             self.state = "removed"
 
-    def move_between_cities(self, travel_rate, mode):
+    def move_between_cities(self, travel_rate):
         if np.random.binomial(1, travel_rate/100, 1):
-            if "Many Cities" in mode:
+            if "Many Cities" in self.mode:
                 self.plot = [np.random.randint(low=1, high=3), np.random.randint(low=1, high=2)]    
 
-    def commute_to_center(self, gather_rate, mode):
-        if "Central Area" in mode:
+    def commute_to_center(self, gather_rate):
+        if "Central Area" in self.mode:
             if np.random.binomial(1, gather_rate/100, 1) and self.x != 500 and self.y != 500:
                 self.x = 500
                 self.y = 500
@@ -57,7 +52,7 @@ class Person:
                 self.x = np.random.randint(0, 1000)
                 self.y = np.random.randint(0, 1000)
     
-    def quarantine(self, symptom_showing, infected_threshold):
+    def quarantine(self, symptom_showing):
         if self.state == "infected no symptoms":
             if np.random.binomial(1, symptom_showing/100, 1):
                 self.state = "infected"
@@ -79,14 +74,13 @@ class Person:
                 self.state = "normal"
                           
 def infect(people, infect_coords, contact_radius, mode):
-    states = []
-    for idx, someone in enumerate(people):
+
+    for someone in people:
         if someone.state == "normal":
             for infected in infect_coords:
-                if np.linalg.norm(np.array([someone.x, someone.y]) - np.array([infected[0], infected[1]])) <= contact_radius:
-                    states.append(["infected no symptoms" if "Isolate" in mode else "infected", idx])
-                    break
-    return np.array(states)
+                if np.linalg.norm([someone.x, someone.y] - [infected[0], infected[1]]) <= contact_radius:
+                    someone.state == "infected no symptoms" if "Isolate" in mode else "infected"
+    return people
 
 """
 "normal", "infected", "infected no symptoms", "vaccinated", "removed"
@@ -94,22 +88,22 @@ def infect(people, infect_coords, contact_radius, mode):
 colors: blue, red, yellow, green, gray
 """
 
-def drawUI_filter_color(plot_coords, state, plot_state, color):
-    # plot_coords = np.array([[0, 1, 0],
-    #                       [10, 2, 1],
-    #                       [5, 6, 2],
-    #                       [10, 4, 3],
-    #                       [4, 7, 4]])
-    # plot_state =np.array(["infected", "normal", "infected", "normal", "normal"])
-    # print(plot_coords[[False, True, False, True, True]])
-    filter = state == plot_state #find idx of type, get array, filter people of plot
+def drawUI_filter_color(plot_coords, state, plot_state, color="r"):
+    #plot_coords=np.array([[1, 2, 0], [3, 2, 1], [5, 8, 2], [10, 0, 3]])
+    #state=np.array(["normal", "infected", "normal", "infected"])
+    #plot_state="normal"
+    #color="r"
+    #print(np.where(state == plot_state)[0])
+    #print(plot_coords[:, 2])
+    filter = plot_coords[np.where(state == plot_state)[0], 2] #find idx of type, get array, filter people of plot
     #print(filter)
     kwargs = {
         "x" : plot_coords[filter, 0],
         "y" : plot_coords[filter, 1],
         "c" : color
-    } 
+    }
     return kwargs
+#drawUI_filter_color()
 
 def drawUI(people, mode):
     state = np.array([someone.state for someone in people])
@@ -210,38 +204,35 @@ def plot_initiate(mode, population, initial_infected, history=[], distance_durat
     fig.tight_layout(pad=0.3)
     return fig, isolatefig, livefig, people, history, distance_duration
 
-def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_countdown=0, gather_rate=0, simulation_state="",
-           symptom_showing=0, people=[], infected_threshold=0, travel_rate=0, vaccination_chance=0, expire_date=0, history=[]):
-    if simulation_state != "Pause":
-        coords = np.array([[someone.x, someone.y] for someone in people])
-        infect_coords = [[someone.x, someone.y] for someone in people if "infect" in someone.state] 
-        for someone in people:
-            if someone.state != "removed":
-                # Default functionalities
-                someone.move(coords, mode, contact_radius, distancing_duration_countdown) #has social distancing
+def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_countdown, gather_rate, 
+           symptom_showing, people, infected_threshold, travel_rate, vaccination_chance, expire_date, history):
+    
+    coords = np.array([[someone.x, someone.y] for someone in people])
+    infect_coords = [] 
+    for someone in people:
+        if someone.state != "removed":
+            # Default functionalities
+            someone.move(coords, coords, mode, contact_radius, distancing_duration_countdown) #has social distancing
 
-                if "infect" in someone.state:
-                    someone.die_or_revive(fatality, recovery_chance)
-                
-                # Scenarios
-                if "Isolate" in mode:
-                    someone.quarantine(symptom_showing, infected_threshold)
-                if "Many Cities" in mode:
-                    someone.move_between_cities(travel_rate, mode)
-                if "Central Area" in mode:
-                    someone.commute_to_center(gather_rate, mode)
-                if "Vaccinate" in mode:
-                    if someone.state == "normal" or someone.state == "vaccinated":
-                        someone.vaccinate(vaccination_chance, expire_date)
+            if "infect" in someone.state:
+                infect_coords.append([someone.x, someone.y])
+                someone.die_or_revive(fatality, recovery_chance)
+            
+            # Scenarios
+            if "Isolate" in mode:
+                someone.quarantine(symptom_showing, infected_threshold)
+            if "Many Cities" in mode:
+                someone.move_between_cities(travel_rate)
+            if "Central Area" in mode:
+                someone.commute_to_center(gather_rate)
+            if "Vaccinate" in mode:
+                if someone.state == "normal" or someone.state == "vaccinated":
+                    someone.vaccinate(vaccination_chance, expire_date)
+    # Move first, infect later
+    people = infect(people, infect_coords, contact_radius, mode)       
 
-        # Move first, infect later
-        states = infect(people, infect_coords, contact_radius, mode)
-        if len(states):
-            for idx, someone in enumerate(np.array(people)[states[:, 1].astype(int)]):
-                someone.state = states[idx, 0]
-
-        #Countdown for Social Distancing
-        distancing_duration_countdown -= 1
+    #Countdown for Social Distancing
+    distancing_duration_countdown -= 1
 
     # draw
     livefig = live_graph(history)
