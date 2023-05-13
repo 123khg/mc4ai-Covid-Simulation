@@ -48,7 +48,9 @@ def R(history, people):
         average (#tranfers_count, #estimated)
     """
     itercount, _, yi, _ = SIR(history)
-    transfer = yi[-1]-yi[-2]
+    if len(yi) >= 2:
+        transfer = yi[len(yi)-1]-yi[len(yi)-2] # not sure if this would going to work
+    else: transfer = yi[0]
     modeli = LinearRegression()
     modeli.fit(itercount, yi)
     estimate = modeli.predict(itercount[-1]+1)
