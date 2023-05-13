@@ -3,7 +3,7 @@ import streamlit as st, plotly as plt, matplotlib.pyplot as mat, numpy as np, ti
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 from simulation_plotting import *
-from analysis import *
+# from analysis import * 
 
 
 st.set_page_config(page_title = "Epidemic Simulation", layout = "wide")
@@ -86,7 +86,7 @@ if stobutt.button('Stop'):
     state.simulate = 'Stop'
 
 if state.simulate != "Configure" and state.simulate != "Stop":
-    refresh = st_autorefresh(interval=population*2.5, limit = 2, key=f"{state.loop}")
+    refresh = st_autorefresh(interval=1000, limit = 2, key=f"{state.loop}")
     state.loop += 1
 
 #SIMULATION SCREEN
