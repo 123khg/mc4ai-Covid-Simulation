@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 
 
 
-def predict(itercount, ys, yi, yr, history):
+def SIR(itercount, ys, yi, yr, history):
     hist = []
     for i, people in enumerate(history):
         for human in people:
@@ -40,11 +40,10 @@ def predict(history):
     axs.scatter(when_to_predict, modeli.predict(when_to_predict))
     axs.scatter(when_to_predict, modelr.predict(when_to_predict))
     axs.show()
-    return axs
+    return fig
 
-def R(itercount, yi):
+def R(history, people):
     from sklearn.linear_model import LinearRegression
-    from app import population
     """
     for each infectious case:
         count # of transfers
@@ -53,9 +52,9 @@ def R(itercount, yi):
     """
     itercount, _, yi, _ = SIR(history)
     if len(yi) >= 2:
-        transfer = yi[len(yi)-1]-yi[len(yi)-2] # not sure if this would going to work
+        transfer = yi[len(yi)-1]-yi[len(yi)-2]
     else: transfer = yi[0]
     modeli = LinearRegression()
     modeli.fit(itercount, yi)
     estimate = modeli.predict(itercount[-1]+1)
-    return (population**(-1))*(0.5*(transfer+estimate))
+    return (len(people)**(-1))*(0.5*(transfer+estimate))

@@ -6,24 +6,22 @@ from simulation_plotting import *
 # from analysis import * 
 
 mode, population, initial_infected, contact_radius, recovery_chance, fatality, = [0]*6
-distancing, duration, center_gather_rate, symptom_showing, = None, 0, 0, 0
+distancing, duration, gather_rate, symptom_showing, = None, 0, 0, 0
 infected_threshold, travel_rate, vaccination_chance, expire_date = [0]*4
 
-st.set_page_config(page_title = "Rhythm Game", layout = "wide")
-st.markdown("<h1 style='text-align: center'>Covid Simulation</h1>", unsafe_allow_html=True)
+st.set_page_config(page_title = "Epidemic Simulation", layout = "wide")
+st.markdown("<h1 style='text-align: center'>Epidemic Simulation</h1>", unsafe_allow_html=True)
 
 #VARIABLES STORING
 state = st.session_state
 if "val" not in state:
     state.val = True
-    state.simulate = "Configuring"
+    state.simulate = "Configure"
+    state.loop = 0
     state.people = []
     state.history = []
     state.archive = []
     state.distance_duration = 0
-
-if state.simulate != "Configuring":
-    st_autorefresh(interval=1000, key="Initiate")
 
 #SIMULATION CONTROLS AND PARAMETERS
 with st.sidebar:
@@ -42,29 +40,29 @@ with st.sidebar:
         initial_infected = population
     
     contact_radius = np.abs(col3.number_input("Interaction radius"))
-    recovery_chance = st.slider("Recovery Chance (%)", 0, 100, 50)
-    fatality = st.slider("Fatality (%)", 0, 100, 50)
+    recovery_chance = st.slider("Recovery Chance (%)", 0, 100, 0)
+    fatality = st.slider("Fatality (%)", 0, 100, 0)
     
     #SCENARIOS
     if "Social Distancing" in mode:
         st.subheader("Social Distancing")
         distancing = st.radio("Duration", ["Finite", "Infinite"], horizontal = True)
         if distancing == "Finite":
-            duration = st.slider("Duration (days)", 5, 365, 30)
+            duration = st.slider("Duration (days)", 0, 365, 0)
     if "Central Area" in mode:
         st.subheader("Central Area")
-        gather_rate = st.slider("Gathering Rate (%)", 0, 100, 50)
+        gather_rate = st.slider("Gathering Rate (%)", 0, 100, 0)
     if "Isolate" in mode:
         st.subheader("Identify + Isolate")
-        symptom_showing = st.slider("Symptom Showing (%)", 0, 100, 50)
-        infected_threshold = st.slider("Infected threshold (ppl)", 0, 300, 20)
+        symptom_showing = st.slider("Symptom Showing (%)", 0, 100, 0)
+        infected_threshold = st.slider("Infected threshold (ppl)", 0, 300, 0)
     if "Many Cities" in mode:
         st.subheader("Many Cities")
-        travel_rate = st.slider("Travel Rate (%)", 0, 100, 50)
+        travel_rate = st.slider("Travel Rate (%)", 0, 100, 0)
     if "Vaccinate" in mode:
         st.subheader("Vaccinate")
-        vaccination_chance = st.slider("Vaccination Chance (%)", 0, 100, 50)
-        expire_date = st.slider("Effectiveness (days)", 0, 60, 30)
+        vaccination_chance = st.slider("Vaccination Chance (%)", 0, 100, 0)
+        expire_date = st.slider("Effectiveness (days)", 0, 60, 0)
     
 #st.text(f"{state.people}")
 
@@ -75,8 +73,6 @@ if simbutt.button("Simulate"):
 
 if paubutt.button("Pause"):
     state.simulate = "Pause"
-    time.sleep(1)
-    state.simulate = "Running"
     
 if stobutt.button('Stop'):
     state.simulate = 'Stop'
@@ -92,20 +88,22 @@ if state.simulate != "Configure":
     if state.simulate == "Initiate":
         simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = plot_initiate(
             mode, population, initial_infected, history=state.history, distance_duration=duration)
+        state.archive.append(live_fig)
         state.simulate = "Running"
     elif state.simulate == "Running":
         simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = update(
-            mode, contact_radius, recovery_chance, fatality, distancing_duration_countdown=state.distance_duration,
-            gather_rate=0, symptom_showing=0, history=state.history, infected_threshold=0, 
-            travel_rate=0, vaccination_chance=0, expire_date=0, people=state.people)
-    
+            mode=mode, contact_radius=contact_radius, recovery_chance=recovery_chance, fatality=fatality, 
+            distancing_duration_countdown=state.distance_duration, gather_rate=gather_rate, symptom_showing=symptom_showing, 
+            history=state.history, infected_threshold=infected_threshold, simulation_state=state.simulate,
+            travel_rate=travel_rate, vaccination_chance=vaccination_chance, expire_date=expire_date, people=state.people)
+        state.archive[-1] = live_fig
         # st.write(R(itercount, yi))
     
     simulate_screen.pyplot(simulate_fig)
     live_chart.pyplot(live_fig)
 
 
-# if state.simulate == "Stop" or state.simulate == "Configuring":
+# if state.simulate == "Stop" or state.simulate == "Configure":
 #     simulate_archive = st.tab(['Simulation'])
 #     for i in state.archive:
 #         simulate_archive.pyplot(i)
@@ -124,5 +122,3 @@ def read_file(path):
         return f.read()
 components.html(read_file("index.html"), height=0, width=0)
 st.markdown(f'<style>{read_file("index.css")}<style/>', unsafe_allow_html = True)
-
-    
