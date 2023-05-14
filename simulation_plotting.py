@@ -92,13 +92,15 @@ def infect(people, infect_coords, contact_radius, mode):
 colors: blue, red, yellow, green, gray
 """
 
-def drawUI_filter_color(plot_coords, state, plot_state, color="r"):
-    filter = state == plot_state
-    kwargs = {
-        "x" : plot_coords[filter, 0],
-        "y" : plot_coords[filter, 1],
-        "c" : color
-    }
+def drawUI_filter_color(plot_coords, state, plot_state, color="r"): 
+    filter = state == plot_state # say we want "vaccinated" but states only have normal and infected, 
+    #  it yields [ False, False, ..., False] right? 
+    if len(filter): #  how about checking if the state is in "all states" before calling the scatter function? in drawUI
+        kwargs = { 
+            "x" : plot_coords[filter, 0], 
+            "y" : plot_coords[filter, 1],
+            "c" : color
+        }
     return kwargs
 
 def drawUI(people, mode):
@@ -106,6 +108,7 @@ def drawUI(people, mode):
     isolated_coords = []
     if "Many Cities" in mode:
         fig, axs = plt.subplots([3, 2])
+        axs.axis("off")
 
         coords = {}
         for row in range(3):
@@ -121,19 +124,27 @@ def drawUI(people, mode):
         for row in range(3):
             for col in range(2):
                 plot_coords = np.array(coords[[row, col]])
-                #Filter color for each state
+                
                 axs[row][col].set_xlim(1000)
                 axs[row][col].set_ylim(1000)
-                axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "normal", "b"))
-                axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected", "r"))
-                axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected no symptoms", "y"))
-                axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "vaccinated", "g"))
-                axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "removed", "gray"))
-                
+
+                #Filter color for each state
+                if "normal" in state:
+                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "normal", "b"))
+                if 'infected' in state:
+                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected", "r"))
+                if 'infected no symptoms' in state:
+                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected no symptoms", "y"))
+                if "vaccinated" in state:
+                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "vaccinated", "g"))
+                if "removed" in state:
+                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "removed", "gray"))
     else:
         fig, axs = plt.subplots()
+        axs.axis("off")
         axs.set_xlim(1000)
         axs.set_ylim(1000)
+
         coords = []
         for idx, someone in enumerate(people):
             if someone.plot == 1:
@@ -141,15 +152,22 @@ def drawUI(people, mode):
             else:
                 coords.append([someone.x, someone.y, idx])
         coords = np.array(coords)
-        axs.scatter(**drawUI_filter_color(coords, state, "normal", "b"))
-        axs.scatter(**drawUI_filter_color(coords, state, "infected", "r"))
-        axs.scatter(**drawUI_filter_color(coords, state, "infected no symptoms", "y"))
-        axs.scatter(**drawUI_filter_color(coords, state, "vaccinated", "g"))
-        axs.scatter(**drawUI_filter_color(coords, state, "removed", "gray"))
+
+        if "normal" in state:
+            axs.scatter(**drawUI_filter_color(coords, state, "normal", "b"))
+        if 'infected' in state:
+            axs.scatter(**drawUI_filter_color(coords, state, "infected", "r"))
+        if 'infected no symptoms' in state:
+            axs.scatter(**drawUI_filter_color(coords, state, "infected no symptoms", "y"))
+        if "vaccinated" in state:
+            axs.scatter(**drawUI_filter_color(coords, state, "vaccinated", "g"))
+        if "removed" in state:
+            axs.scatter(**drawUI_filter_color(coords, state, "removed", "gray"))
 
     if "Isolate" in mode:
         isolated_coords = np.array(isolated_coords)
         isolatefig, isolateaxs = plt.subplots()
+        isolateaxs.axis("off")
         isolateaxs.set_xlim(1000)
         isolateaxs.set_ylim(1000)
         isolateaxs.scatter(isolated_coords[:, 0], isolated_coords[:, 1], c="r")
@@ -160,24 +178,24 @@ def drawUI(people, mode):
 
 def live_graph(history): 
     fig, axs = plt.subplots()
-    if len(history) > 0:
+    if len(history) > 0: 
         hist = []
-        for i, people in enumerate(history):
-            for human in people:
-                s_count = 0
-                i_count = 0
-                r_count = 0
-                if human.state == "normal" or human.state == "vaccinated": s_count+=1
-                if human.state == "infected" or human.state == "infected no symptoms": i_count+=1
-                if human.state == "removed": r_count+=1
-            hist.append([i, s_count, i_count, r_count])
+        for day, people in enumerate(history):
+            sir_count = [0, 0, 0]
+
+            for someone in people:
+                if someone.state == "normal" or someone.state == "vaccinated": sir_count[0] += 1
+                if "infect" in someone.state: sir_count[1] += 1
+                if someone.state == "removed": sir_count[2] += 1
+                
+            hist.append([day, sir_count[0], sir_count[1], sir_count[2]])
         hist = np.array(hist)
-        
-        axs.plot(hist[:,0], hist[:,1], c="blue")
-        axs.plot(hist[:,0], hist[:,2], c="red")
-        axs.plot(hist[:,0], hist[:,3], c="gray")
-    axs.legend(["normal", "infected", "removed"])
-    return fig
+
+        axs.plot(hist[:, 0].astype(int), hist[:, 1].astype(int), c="blue")
+        axs.plot(hist[:, 0].astype(int), hist[:, 2].astype(int), c="red")
+        axs.plot(hist[:, 0].astype(int), hist[:, 3].astype(int), c="gray")
+        axs.legend(["normal", "infected", "removed"])
+        return fig
 
 def plot_initiate(mode, population, initial_infected, history=[], distance_duration=0):
     #Create population data
