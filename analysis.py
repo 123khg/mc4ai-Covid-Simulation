@@ -4,22 +4,23 @@ from sklearn.linear_model import LinearRegression
 
 
 
-def SIR(itercount, ys, yi, yr, history):
+def SIR(history):
     hist = []
-    for i, people in enumerate(history):
-        for human in people:
-            s_count = 0
-            i_count = 0
-            r_count = 0
-            if human.state == "normal" or human.state == "vaccinated": s_count+=1
-            if human.state == "infected" or human.state == "infected no symptoms": i_count+=1
-            if human.state == "removed": r_count+=1
-    hist.append([i, s_count, i_count, r_count])
+    for day, people in enumerate(history):
+        sir_count = [0, 0, 0]
+
+        for someone in people:
+            if someone.state == "normal" or someone.state == "vaccinated": 
+                sir_count[0] += 1
+            if "infect" in str(someone.state): 
+                sir_count[1] += 1
+            if someone.state == "removed": 
+                sir_count[2] += 1
+            
+        hist.append([day, sir_count[0], sir_count[1], sir_count[2]])
     hist = np.array(hist)
     
     itercount = hist[:, 0]
-    itercount = np.array(itercount)
-    itercount = itercount.reshape(-1, 1)
     ys = hist[:, 1]
     yi = hist[:, 2]
     yr = hist[:, 3]

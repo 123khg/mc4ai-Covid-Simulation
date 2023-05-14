@@ -3,7 +3,7 @@ import streamlit as st, plotly as plt, matplotlib.pyplot as mat, numpy as np, ti
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
 from simulation_plotting import *
-# from analysis import * 
+from analysis import * 
 
 mode, population, initial_infected, contact_radius, recovery_chance, fatality, = [0]*6
 distancing, duration, gather_rate, symptom_showing, = None, 0, 0, 0
@@ -82,32 +82,46 @@ if stobutt.button('Stop'):
     state.simulate = 'Stop'
 
 if state.simulate != "Configure" and state.simulate != "Stop":
-    refresh = st_autorefresh(interval=1000, limit = 2, key=f"{state.loop}")
+    refresh = st_autorefresh(interval=int(population*5), limit = 2, key=f"{state.loop}")
     state.loop += 1
 
 #SIMULATION SCREEN
 if state.simulate != "Configure":
     live_chart, simulate_screen = st.columns(2)
-    
-    if state.simulate == "Initiate":
-        simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = plot_initiate(
-            mode, population, initial_infected, history=state.history, distance_duration=duration)
-        simulate_screen.pyplot(simulate_fig)
 
+    #Reason for encoding and decoding is because 1 person is stored as a "class" and each iteration, the properties change
+    #And so does the one before when putting them in a history -> can not store
+    #Decode
+    history = []
+    for people in state.history:
+        history.append([Person(someone[0], someone[1], someone[2], someone[3]) for someone in people])
+    
+    #Update loop
+    if state.simulate == "Initiate":
+        simulate_fig, isolate_fig, live_fig, state.people, state.distance_duration = plot_initiate(
+            mode, population, initial_infected, history, duration)
+        simulate_screen.pyplot(simulate_fig)
         state.archive.append([live_fig, simulate_fig])
         state.simulate = "Running"
     elif state.simulate == "Running":
-        simulate_fig, isolate_fig, live_fig, state.people, state.history, state.distance_duration = update(
+        simulate_fig, isolate_fig, live_fig, state.people, state.distance_duration = update(
             mode=mode, contact_radius=contact_radius, recovery_chance=recovery_chance, fatality=fatality, 
             distancing_duration_countdown=state.distance_duration, gather_rate=gather_rate, symptom_showing=symptom_showing, 
-            history=state.history, infected_threshold=infected_threshold, simulation_state=state.simulate,
+            history=history, infected_threshold=infected_threshold, simulation_state=state.simulate,
             travel_rate=travel_rate, vaccination_chance=vaccination_chance, expire_date=expire_date, people=state.people)
         state.archive[-1] = [live_fig, simulate_fig]
-        
-        # st.write(R(itercount, yi))
+        st.write(R(history, state.people))
+    
+    #Encode
+    people = [[someone.plot, someone.x, someone.y, someone.state] for someone in state.people]
+    state.history.append(people)
+
 
     simulate_screen.pyplot(state.archive[-1][1])
     live_chart.pyplot(state.archive[-1][0])
+    
+    #st.write(f"{hist[:, 0], hist[:, 1], hist[:, 2], hist[:, 3]}")
+
 
 if state.simulate == "Stop" or state.simulate == "Configure":
     if state.simulate == "Stop":
