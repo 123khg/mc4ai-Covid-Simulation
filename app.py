@@ -40,8 +40,8 @@ with st.sidebar:
         initial_infected = population
     
     contact_radius = np.abs(col3.number_input("Interaction radius"))
-    recovery_chance = st.slider("Recovery Chance (%)", 0, 100, 0)
-    fatality = st.slider("Fatality (%)", 0, 100, 0)
+    recovery_chance = st.slider("Recovery Chance (%)", 0, 1000, 0)
+    fatality = st.slider("Fatality (%)", 0, 1000, 0)
     
     #SCENARIOS
     if "Social Distancing" in mode:
