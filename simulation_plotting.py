@@ -38,13 +38,13 @@ class Person:
         self.y += int(y)
 
     def die_or_revive(self, fatality, recovery_chance):
-        if np.random.binomial(1, recovery_chance/1000, 1):
+        if np.random.binomial(1, recovery_chance/100, 1):
             self.state = "normal"
         elif np.random.binomial(1, fatality/1000, 1):
             self.state = "removed"
 
     def move_between_cities(self, travel_rate):
-        if np.random.binomial(1, travel_rate/100, 1):
+        if np.random.binomial(1, travel_rate/1000, 1):
             self.plot = [np.random.randint(low=1, high=3), np.random.randint(low=1, high=2)]    
 
     def commute_to_center(self, gather_rate):
