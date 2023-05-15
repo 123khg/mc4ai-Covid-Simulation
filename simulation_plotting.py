@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 rng = default_rng()
 
 class Person:
-    def __init__(self, plot, x, y, state, delay = 5):
+    def __init__(self, plot, x, y, state, quarantine_rate):
         self.plot = plot
         self.x = x
         self.y = y
         self.state = state
-        self.quarantine_delay = delay # Cuz the officials are too bad they cant isolate quickly
+        self.quarantine_rate = quarantine_rate/100
         self.vaccin_expire = 0
         
     def move(self, coords, mode, contact_radius, distancing_duration, _norm = np.linalg.norm): 
@@ -38,9 +38,9 @@ class Person:
         self.y += int(y)
 
     def die_or_revive(self, fatality, recovery_chance):
-        if np.random.binomial(1, recovery_chance/1000, 1):
+        if np.random.binomial(1, recovery_chance/100, 1):
             self.state = "normal"
-        elif np.random.binomial(1, fatality/1000, 1):
+        elif np.random.binomial(1, fatality/100, 1):
             self.state = "removed"
 
     def move_between_cities(self, travel_rate):
@@ -60,9 +60,7 @@ class Person:
             if np.random.binomial(1, symptom_showing/100, 1):
                 self.state = "infected"
         elif self.state == "infected":
-            if self.quarantine_delay > 0:
-                self.quarantine_delay -= 1
-            else:
+            if np.random.binomial(1, self.quarantine_rate, 1):
                 self.plot = 1
     
     def vaccinate(self, vaccination_chance, expire_date):
@@ -103,10 +101,12 @@ def drawUI_filter_color(plot_coords, state, plot_state, color="r"):
     return kwargs
 
 def drawUI(people, mode):
-    state = np.array([someone.state for someone in people])
+    state = np.array([someone.state for someone in people if someone.plot != 1])
     isolated_coords = []
+
+    #Plot drawing
     if "Many Cities" in mode:
-        fig, axs = plt.subplots([3, 2])
+        fig, axs = plt.subplots(3, 2)
         axs.axis("off")
 
         coords = {}
@@ -152,6 +152,7 @@ def drawUI(people, mode):
                 coords.append([someone.x, someone.y, idx])
         coords = np.array(coords)
 
+        #Filter color for each state
         if "normal" in state:
             axs.scatter(**drawUI_filter_color(coords, state, "normal", "b"))
         if 'infected' in state:
@@ -170,13 +171,15 @@ def drawUI(people, mode):
         isolateaxs.axis("off")
         isolateaxs.set_xlim(1000)
         isolateaxs.set_ylim(1000)
-        isolateaxs.scatter(isolated_coords[:, 0], isolated_coords[:, 1], c="r")
+        if len(isolated_coords):
+            isolateaxs.scatter(isolated_coords[:, 0], isolated_coords[:, 1], c="r")
+        isolateaxs.plot([0, 1000, 1000, 1, 1], [0, 0, 1000, 1000, 0], c="black")
     else:
         isolatefig = False
 
     return fig, isolatefig
 
-def live_graph(history=[]): 
+def live_graph(history): 
     # history = [[Person(0, 0, 1,"normal"),
     #             Person(0, 5, 6, "infected no symptoms"),
     #             Person(0, 10, 2, "removed"),
@@ -209,7 +212,7 @@ def live_graph(history=[]):
                 
             hist.append([day, sir_count[0], sir_count[1], sir_count[2]])
         hist = np.array(hist)
-        print(hist, hist[:, 0], hist[:, 1], hist[:, 2], hist[:, 3], type(hist[:,0]))
+        #print(hist, hist[:, 0], hist[:, 1], hist[:, 2], hist[:, 3], type(hist[:,0]))
 
         axs.plot(hist[:, 0], hist[:, 1], c="blue")
         axs.plot(hist[:, 0], hist[:, 2], c="red")
@@ -217,7 +220,7 @@ def live_graph(history=[]):
         axs.legend(["normal", "infected", "removed"])
     return fig
 
-def plot_initiate(mode, population, initial_infected, history, distance_duration):
+def plot_initiate(mode, population, initial_infected, history, distance_duration, quarantine_rate):
     #Create population data
     infect = rng.choice(population, size=initial_infected,replace=False).tolist()
     people = []
@@ -225,11 +228,12 @@ def plot_initiate(mode, population, initial_infected, history, distance_duration
         plot = [np.random.randint(0, 3), np.random.randint(0, 2)] if "Many Cities" in mode else 0
         x = np.random.randint(0, 1000)
         y = np.random.randint(0, 1000)
-        if "Isolation" in mode:
+        if "Isolate" in mode:
             state = "infected no symptoms" if idx in infect else "normal"
         else:
             state = "infected" if idx in infect else "normal"
-        people.append(Person(plot, x, y, state))
+        
+        people.append(Person(plot, x, y, state, quarantine_rate if "Isolate" in mode else 0))
 
     #Live graph for real-time analysis
     livefig = live_graph(history)
@@ -238,9 +242,10 @@ def plot_initiate(mode, population, initial_infected, history, distance_duration
     return fig, isolatefig, livefig, people, distance_duration
 
 def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_countdown, gather_rate, simulation_state,
-           symptom_showing, people, infected_threshold, travel_rate, vaccination_chance, expire_date, history):
+           symptom_showing, people, travel_rate, vaccination_chance, expire_date, history):
     if simulation_state != "Pause" or simulation_state != "Stop":
         coords = np.array([[someone.x, someone.y] for someone in people])
+
         infect_coords = [] 
         for someone in people:
             if someone.state != "removed":
@@ -253,7 +258,7 @@ def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_
                 
                 # Scenarios
                 if "Isolate" in mode:
-                    someone.quarantine(symptom_showing, infected_threshold)
+                    someone.quarantine(symptom_showing)
                 if "Many Cities" in mode:
                     someone.move_between_cities(travel_rate)
                 if "Central Area" in mode:
@@ -261,8 +266,9 @@ def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_
                 if "Vaccinate" in mode:
                     if someone.state == "normal" or someone.state == "vaccinated":
                         someone.vaccinate(vaccination_chance, expire_date)
-
-        # Move first, infect later
+            
+        
+        # Move first, Infect later
         infected_coords = infect(people, infect_coords, contact_radius, mode)
         if len(infected_coords):
             for idx, someone in enumerate(np.array(people)[infected_coords[:, 1].astype(int)]):
