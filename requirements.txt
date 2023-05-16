@@ -1,0 +1,6 @@
+streamlit
+scikit-learn
+numpy
+streamlit_autorefresh
+matplotlib
+plotly
