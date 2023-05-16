@@ -1,3 +1,6 @@
+# Influenced by 3Blue1Brown Epidemic
+
+
 #SETUP
 import streamlit as st, plotly as plt, matplotlib.pyplot as mat, numpy as np, time
 from streamlit_autorefresh import st_autorefresh
@@ -16,12 +19,17 @@ st.markdown("<h1 style='text-align: center'>Epidemic Simulation</h1>", unsafe_al
 state = st.session_state
 if "val" not in state:
     state.val = True
+    state.R = [0]
+    state.day = 0
     state.simulate = "Configure"
     state.loop = 0
     state.people = []
     state.history = []
     state.archive = []
     state.distance_duration = 0
+
+def Map_Range(low, high, inputlow, inputhigh, input):
+    return (high - low)/(inputhigh - inputlow) * (input - inputlow)
 
 #SIMULATION CONTROLS AND PARAMETERS
 with st.sidebar:
@@ -82,7 +90,7 @@ if stobutt.button('Stop'):
     state.simulate = 'Stop'
 #MAIN LOOP
 if state.simulate != "Configure" and state.simulate != "Stop":
-    refresh = st_autorefresh(interval=int(1000+population), limit = 2, key=f"{state.loop}")
+    refresh = st_autorefresh(interval=int(Map_Range(500, 4000, 1, 1000, population+population*len(mode))), limit = 2, key=f"{state.loop}")
     state.loop += 1
 
 #SIMULATION SCREEN
@@ -90,13 +98,12 @@ if state.simulate != "Configure":
     #Structure
     if "Isolate" in mode:
         live_chart, simulate_screen, isolation_chamber = st.columns(3)
-        live_chart.markdown("<h5 style='text-align: center'>Live Population Graph</h5>", unsafe_allow_html=True)
-        simulate_screen.markdown("<h5 style='text-align: center'>Population</h5>", unsafe_allow_html=True)
         isolation_chamber.markdown("<h5 style='text-align: center'>Isolation Chamber</h5>", unsafe_allow_html=True)
     else:
         live_chart, simulate_screen = st.columns(2)
-        live_chart.markdown("<h5 style='text-align: center'>Live Population Graph</h5>", unsafe_allow_html=True)
-        simulate_screen.markdown("<h5 style='text-align: center'>Population</h5>", unsafe_allow_html=True)
+
+    live_chart.markdown("<h5 style='text-align: center'>Live Population Graph</h5>", unsafe_allow_html=True)
+    simulate_screen.markdown("<h5 style='text-align: center'>Population</h5>", unsafe_allow_html=True)
 
     #Reason for encoding and decoding is because 1 person is stored as a "class" and each iteration, the properties change
     #And so does the one before when putting them in a history -> can not store
@@ -119,8 +126,9 @@ if state.simulate != "Configure":
             history=history, simulation_state=state.simulate, travel_rate=travel_rate, 
             vaccination_chance=vaccination_chance, expire_date=expire_date, people=state.people)
         state.archive[-1] = [live_fig, simulate_fig, isolate_fig]
-    if len(history):
-        st.write(R(history, population))
+    
+    if state.day % 3 == 0 and len(history):
+        state.R.append(Effective_R(history))
     
     #Encode
     people = [[someone.plot, someone.x, someone.y, someone.state, someone.quarantine_rate] for someone in state.people]
@@ -131,8 +139,18 @@ if state.simulate != "Configure":
     if "Isolate" in mode:
         isolation_chamber.pyplot(state.archive[-1][2])
     live_chart.pyplot(state.archive[-1][0])
-    st.write("---")
-    #st.write(f"{hist[:, 0], hist[:, 1], hist[:, 2], hist[:, 3]}")
+
+    #Metrics
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    state_counts = state_count(state.people)
+    c1.metric("Normal", state_counts[0])
+    c2.metric("Vaccinated", state_counts[1])
+    c3.metric("Infected", state_counts[2])
+    c4.metric("Infected no symptoms", state_counts[3])
+    c5.metric("Removed", state_counts[4])
+    c6.metric("Reproductive (R)", round(state.R[-1], 3))
+
+    state.day += 1
 
 
 if state.simulate == "Stop" or state.simulate == "Configure":
@@ -151,6 +169,7 @@ if state.simulate == "Stop" or state.simulate == "Configure":
     if state.simulate == "Stop":   
         state.simulate = "Configure"
         state.loop = 0
+        state.R = 0
         state.people = []
         state.history = []
         state.distance_duration = 0

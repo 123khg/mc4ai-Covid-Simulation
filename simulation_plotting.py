@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 rng = default_rng()
 
 class Person:
-    def __init__(self, plot, x, y, state, quarantine_rate):
+    def __init__(self, plot, x, y, state, quarantine_rate = 0):
         self.plot = plot
         self.x = x
         self.y = y
@@ -15,7 +15,7 @@ class Person:
         self.vaccin_expire = 0
         
     def move(self, coords, mode, contact_radius, distancing_duration, _norm = np.linalg.norm): 
-        vel = 20
+        vel = 10
         if vel <= self.x <= 1000-vel: 
             x = np.random.randint(low=-vel, high=vel)
         else:
@@ -45,12 +45,14 @@ class Person:
 
     def move_between_cities(self, travel_rate):
         if np.random.binomial(1, travel_rate/100, 1):
-            self.plot = [np.random.randint(low=1, high=3), np.random.randint(low=1, high=2)]    
+            self.plot = [np.random.randint(low=0, high=3), np.random.randint(low=0, high=2)]    
+            self.x = np.random.randint(-999, 999)
+            self.y = np.random.randint(-999, 999)
 
     def commute_to_center(self, gather_rate):
         if 450 <= self.x <= 550 and 450 <= self.y <= 550:
-            self.x = np.random.randint(0, 1000)
-            self.y = np.random.randint(0, 1000)
+            self.x = np.random.randint(0, 999)
+            self.y = np.random.randint(0, 999)
         if np.random.binomial(1, gather_rate/100, 1):
             self.x = np.random.randint(low=490, high=510)
             self.y = np.random.randint(low=490, high=510)
@@ -91,7 +93,7 @@ colors: blue, red, yellow, green, gray
 """
 
 def drawUI_filter_color(plot_coords, state, plot_state, color="r"): 
-    filter = state == plot_state
+    filter = state[plot_coords[:, 2]] == plot_state
     if len(filter):
         kwargs = { 
             "x" : plot_coords[filter, 0], 
@@ -100,44 +102,51 @@ def drawUI_filter_color(plot_coords, state, plot_state, color="r"):
         }
     return kwargs
 
-def drawUI(people, mode):
-    state = np.array([someone.state for someone in people if someone.plot != 1])
+def drawUI(people=[], mode=[]):
+    # people = [Person([1, 1], 5, 10, "normal"), Person([2, 0], 2, 5, "infected"), Person([0, 0], 10, 4, "removed")]
+    # mode = ["Many Cities"]
+    state = np.array([someone.state for someone in people])
     isolated_coords = []
 
     #Plot drawing
     if "Many Cities" in mode:
         fig, axs = plt.subplots(3, 2)
-        axs.axis("off")
 
+        #Create map
         coords = {}
         for row in range(3):
             for col in range(2):
-                coords[[row, col]] = []
+                coords[f"[{row}, {col}]"] = []
         
+        #Add coords to map
         for idx, someone in enumerate(people):
             if someone.plot == 1:
                 isolated_coords.append([someone.x, someone.y, idx])
             else:
-                coords[someone.plot].append([someone.x, someone.y, idx])
-
+                coords[f"{someone.plot}"].append([someone.x, someone.y, idx])
+        
+        #Draw
         for row in range(3):
             for col in range(2):
-                plot_coords = np.array(coords[[row, col]])
-                
+                plot_coords = np.array(coords[f"[{row}, {col}]"])
+
                 axs[row][col].set_xlim(1000)
                 axs[row][col].set_ylim(1000)
-
+                axs[row][col].axis("off")
+                axs[row][col].plot([0, 1000, 1000, 1, 1], [0, 0, 1000, 1000, 0], c="black")
+                
                 #Filter color for each state
-                if "normal" in state:
-                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "normal", "b"))
-                if 'infected' in state:
-                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected", "r"))
-                if 'infected no symptoms' in state:
-                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected no symptoms", "y"))
-                if "vaccinated" in state:
-                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "vaccinated", "g"))
-                if "removed" in state:
-                    axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "removed", "gray"))
+                if len(plot_coords):
+                    if "normal" in state:
+                        axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "normal", "b"))
+                    if 'infected' in state:
+                        axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected", "r"))
+                    if 'infected no symptoms' in state:
+                        axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "infected no symptoms", "y"))
+                    if "vaccinated" in state:
+                        axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "vaccinated", "g"))
+                    if "removed" in state:
+                        axs[row][col].scatter(**drawUI_filter_color(plot_coords, state, "removed", "gray"))
     else:
         fig, axs = plt.subplots()
         axs.axis("off")
@@ -180,22 +189,6 @@ def drawUI(people, mode):
     return fig, isolatefig
 
 def live_graph(history): 
-    # history = [[Person(0, 0, 1,"normal"),
-    #             Person(0, 5, 6, "infected no symptoms"),
-    #             Person(0, 10, 2, "removed"),
-    #             Person(0, 6, 7, "infected")],
-    #             [Person(0, 0, 1,"infected"),
-    #             Person(0, 5, 6, "infected no symptoms"),
-    #             Person(0, 10, 2, "removed"),
-    #             Person(0, 6, 7, "removed")],
-    #             [Person(0, 0, 1,"normal"),
-    #             Person(0, 5, 6, "infected"),
-    #             Person(0, 10, 2, "removed"),
-    #             Person(0, 6, 7, "removed")],
-    #             [Person(0, 0, 1,"vaccinated"),
-    #             Person(0, 5, 6, "removed"),
-    #             Person(0, 10, 2, "removed"),
-    #             Person(0, 6, 7, "removed")],]
     fig, axs = plt.subplots()
     if len(history) > 0: 
         hist = []
@@ -226,8 +219,8 @@ def plot_initiate(mode, population, initial_infected, history, distance_duration
     people = []
     for idx in range(population):
         plot = [np.random.randint(0, 3), np.random.randint(0, 2)] if "Many Cities" in mode else 0
-        x = np.random.randint(0, 1000)
-        y = np.random.randint(0, 1000)
+        x = np.random.randint(0, 999)
+        y = np.random.randint(0, 999)
         if "Isolate" in mode:
             state = "infected no symptoms" if idx in infect else "normal"
         else:
