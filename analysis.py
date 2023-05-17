@@ -1,6 +1,4 @@
-import numpy as np, matplotlib as plt
-from simulation_plotting import live_graph
-from sklearn.linear_model import LinearRegression
+import numpy as np
 
 def state_count(people):
     count = [0, 0, 0, 0, 0]
@@ -38,24 +36,7 @@ def SIR(history):
     yr = hist[:, 2]
     return ys, yi, yr
 
-def predict(history):
-    itercount, ys, yi, yr = SIR(history)
-    models = LinearRegression()
-    modeli = LinearRegression()
-    modelr = LinearRegression()
-    models.fit(itercount, ys)
-    modeli.fit(itercount, yi)
-    modelr.fit(itercount, yr)
-
-    fig, axs = plt.subplots()
-    when_to_predict = 5
-    axs.scatter(when_to_predict, models.predict(when_to_predict))
-    axs.scatter(when_to_predict, modeli.predict(when_to_predict))
-    axs.scatter(when_to_predict, modelr.predict(when_to_predict))
-    axs.show()
-    return fig
-
-def Effective_R(history):
+def Effective_R(history, interval):
     """
     for # number of infected people on 1st day (N0)
     check # number of infected after some interval (N1)
@@ -64,67 +45,4 @@ def Effective_R(history):
     R0 applies when no immunities and no one has ever got the disease (100% susceptible)
     """
     _, yi, _ = SIR(history)
-    return yi[-1] / yi[-3]
-
-
-# from simulation_plotting import Person
-
-# Effective_R(history = [[Person(0, 0, 1,"normal", 0),
-#             Person(0, 5, 6, "infected no symptoms", 0),
-#             Person(0, 10, 2, "removed", 0),
-#             Person(0, 6, 7, "infected", 0)],
-#             [Person(0, 0, 1,"infected", 0),
-#             Person(0, 5, 6, "infected no symptoms", 0),
-#             Person(0, 10, 2, "removed", 0),
-#             Person(0, 6, 7, "removed", 0)],
-#             [Person(0, 0, 1,"normal", 0),
-#             Person(0, 5, 6, "infected", 0),
-#             Person(0, 10, 2, "removed", 0),
-#             Person(0, 6, 7, "removed", 0)],
-#             [Person(0, 0, 1,"vaccinated", 0),
-#             Person(0, 5, 6, "removed", 0),
-#             Person(0, 10, 2, "removed", 0),
-#             Person(0, 6, 7, "removed", 0)]])
-
-
-
-
-    # itercount, _, yi, _ = SIR(history)
-    # yesterday = itercount[-1] 
-    # predicted_day = yesterday + 5
-    # predicted_day = np.array(predicted_day)
-    # predicted_day = predicted_day.reshape(-1, 1)
-    # itercount = np.array(itercount)
-    # itercount = itercount.reshape(-1, 1)
-    # if len(yi) >= 2:
-    #     transfer = yi[len(yi)-1]-yi[len(yi)-2] 
-    #     # print(transfer)
-    # else: transfer = yi[0]
-    # modeli = LinearRegression()
-    # modeli.fit(itercount, yi)
-    # estimate = modeli.predict(predicted_day)
-    # estimate = estimate[0]
-    # if estimate < 0: estimate = 0
-    # return (0.5*(transfer+estimate))/yi[-2]
-
-
-# # test area
-# itercount, ys, yi, yr = SIR(    
-#     history = [[Person(0, 0, 1,"normal", 0),
-#                 Person(0, 5, 6, "infected no symptoms", 0),
-#                 Person(0, 10, 2, "removed", 0),
-#                 Person(0, 6, 7, "infected", 0)],
-#                 [Person(0, 0, 1,"infected", 0),
-#                 Person(0, 5, 6, "infected no symptoms", 0),
-#                 Person(0, 10, 2, "removed", 0),
-#                 Person(0, 6, 7, "removed", 0)],
-#                 [Person(0, 0, 1,"normal", 0),
-#                 Person(0, 5, 6, "infected", 0),
-#                 Person(0, 10, 2, "removed", 0),
-#                 Person(0, 6, 7, "removed", 0)],
-#                 [Person(0, 0, 1,"vaccinated", 0),
-#                 Person(0, 5, 6, "removed", 0),
-#                 Person(0, 10, 2, "removed", 0),
-#                 Person(0, 6, 7, "removed", 0)]])
-
-
+    return yi[-1] / yi[-interval]

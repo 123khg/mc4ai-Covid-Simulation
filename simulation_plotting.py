@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.random import default_rng
-import sklearn.cluster._kmeans as kmc
 import matplotlib.pyplot as plt
 
 rng = default_rng()
@@ -30,9 +29,9 @@ class Person:
                 thiscoord = np.array([self.x, self.y])
                 for coord in coords:
                     dist = _norm(np.array(coord)-thiscoord)
-                    if dist <= contact_radius*5:
-                        x += 50*vel*(contact_radius/dist) * ((self.x - coord[0])/(abs(self.x - coord[0])+1))
-                        y += 50*vel*(contact_radius/dist) * ((self.y - coord[1])/(abs(self.y - coord[1])+1))
+                    if dist <= contact_radius*6:
+                        x += vel**5*(contact_radius/dist) * ((self.x - coord[0])/(abs(self.x - coord[0])+1))
+                        y += vel**5*(contact_radius/dist) * ((self.y - coord[1])/(abs(self.y - coord[1])+1))
         
         self.x += int(x)
         self.y += int(y)
@@ -190,6 +189,8 @@ def drawUI(people=[], mode=[]):
 
 def live_graph(history): 
     fig, axs = plt.subplots()
+    axs.set_ylabel("People")
+    axs.set_xlabel("Days")
     if len(history) > 0: 
         hist = []
         for day, people in enumerate(history):
@@ -241,26 +242,26 @@ def update(mode, contact_radius, recovery_chance, fatality, distancing_duration_
 
         infect_coords = [] 
         for someone in people:
-            if someone.state != "removed":
-                # Default functionalities
-                someone.move(coords, mode, contact_radius, distancing_duration_countdown) #has social distancing
+            if someone.plot != 1:
+                if someone.state != "removed":
+                    # Default functionalities
+                    someone.move(coords, mode, contact_radius, distancing_duration_countdown) #has social distancing
 
-                if "infect" in someone.state:
-                    infect_coords.append([someone.x, someone.y])
-                    someone.die_or_revive(fatality, recovery_chance)
-                
-                # Scenarios
-                if "Isolate" in mode:
-                    someone.quarantine(symptom_showing)
-                if "Many Cities" in mode:
-                    someone.move_between_cities(travel_rate)
-                if "Central Area" in mode:
-                    someone.commute_to_center(gather_rate)
-                if "Vaccinate" in mode:
-                    if someone.state == "normal" or someone.state == "vaccinated":
-                        someone.vaccinate(vaccination_chance, expire_date)
-            
-        
+                    if "infect" in someone.state:
+                        infect_coords.append([someone.x, someone.y])
+                        someone.die_or_revive(fatality, recovery_chance)
+                    
+                    # Scenarios
+                    if "Isolate" in mode:
+                        someone.quarantine(symptom_showing)
+                    if "Many Cities" in mode:
+                        someone.move_between_cities(travel_rate)
+                    if "Central Area" in mode:
+                        someone.commute_to_center(gather_rate)
+                    if "Vaccinate" in mode:
+                        if someone.state == "normal" or someone.state == "vaccinated":
+                            someone.vaccinate(vaccination_chance, expire_date)
+
         # Move first, Infect later
         infected_coords = infect(people, infect_coords, contact_radius, mode)
         if len(infected_coords):
