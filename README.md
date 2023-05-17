@@ -24,4 +24,4 @@
 | Styling                       | Nguyễn Phước Khang + Trần Gia Bảo | 13/05/23                |
 | Video Clip                    | Nguyễn Phước Khang                | 14/05/23                |
 
-## Video dự án:
+## Video dự án: https://youtu.be/dvHEJCroDFc
