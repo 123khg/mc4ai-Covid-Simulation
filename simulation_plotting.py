@@ -101,9 +101,7 @@ def drawUI_filter_color(plot_coords, state, plot_state, color="r"):
         }
     return kwargs
 
-def drawUI(people=[], mode=[]):
-    # people = [Person([1, 1], 5, 10, "normal"), Person([2, 0], 2, 5, "infected"), Person([0, 0], 10, 4, "removed")]
-    # mode = ["Many Cities"]
+def drawUI(people, mode):
     state = np.array([someone.state for someone in people])
     isolated_coords = []
 
